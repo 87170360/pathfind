@@ -19,8 +19,20 @@ func (g *Grid) F() int {
 	return g.H + g.G
 }
 
+func (g *Grid) isStart() bool {
+	return g.S == StateStart
+}
+
+func (g *Grid) isTarget() bool {
+	return g.S == StateTarget
+}
+
 //数组第一维代表1行row
-type World [COL][ROW]*Grid
+type World struct {
+	grids [COL][ROW]*Grid
+	start *Grid
+	target *Grid
+}
 
 func (this *World) LoadWorld(world string) bool {
 	w := strings.TrimSpace(world)
@@ -35,7 +47,13 @@ func (this *World) LoadWorld(world string) bool {
 				Y: j,
 			}
 
-			this[c][j] = grid
+			this.grids[c][j] = grid
+			if grid.isStart() {
+				this.start = grid
+			}
+			if grid.isTarget() {
+				this.target = grid
+			}
 		}
 	}
 	return true
@@ -45,7 +63,7 @@ func (this *World) LoadWorld(world string) bool {
 func (this *World) Print() {
 	for i := ROW - 1; i >= 0; i-- {
 		for j := 0; j < COL; j++ {
-			grid := this[i][j]
+			grid := this.grids[i][j]
 			fmt.Printf("%v", grid.S)
 		}
 		fmt.Println("")
