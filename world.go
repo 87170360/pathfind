@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 //格子
 type Grid struct {
@@ -16,18 +19,35 @@ func (g *Grid) F() int {
 	return g.H + g.G
 }
 
+//数组第一维代表1行row
+type World [COL][ROW]*Grid
+
+func (this *World) LoadWorld(world string) bool {
+	w := strings.TrimSpace(world)
+
+	tmp := strings.Split(w, "\n")
+	for i, row := range tmp {
+		for j, v := range row {
+			c := COL - 1 - i
+			grid := &Grid{
+				S: string(v),
+				X: c,
+				Y: j,
+			}
+
+			this[c][j] = grid
+		}
+	}
+	return true
+}
 
 //打印地图
-func PrintWorld(world *World) {
+func (this *World) Print() {
 	for i := ROW - 1; i >= 0; i-- {
 		for j := 0; j < COL; j++ {
-			grid := world[i][j]
+			grid := this[i][j]
 			fmt.Printf("%v", grid.S)
 		}
 		fmt.Println("")
 	}
 }
-
-
-
-

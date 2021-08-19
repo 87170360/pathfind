@@ -4,7 +4,7 @@ package main
 var OpenList PriorityQueue
 
 //Close列表
-var ClineList []*Grid
+var CloseList []*Grid
 
 func FindPath(world *World) *World {
 	return world
