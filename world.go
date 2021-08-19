@@ -27,6 +27,7 @@ func (g *Grid) isTarget() bool {
 	return g.S == StateTarget
 }
 
+
 //数组第一维代表1行row
 type World struct {
 	grids [COL][ROW]*Grid
@@ -57,6 +58,14 @@ func (this *World) LoadWorld(world string) bool {
 		}
 	}
 	return true
+}
+
+func (this *World) getGridByPox(x, y int) *Grid {
+	return this.grids[y][x]
+}
+
+func (this *World) neighbors(g *Grid) []*Grid {
+	//
 }
 
 //打印地图

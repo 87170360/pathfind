@@ -7,5 +7,7 @@ var OpenList PriorityQueue
 var CloseList []*Grid
 
 func FindPath(world *World) *World {
+
+
 	return world
 }
