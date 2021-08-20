@@ -68,7 +68,8 @@ func (this *World) getGridByPox(x, y int) *Grid {
 
 func (this *World) neighbors(g *Grid) []*Grid {
 	//上，下，左，右，上左，上右，下左，下右
-	offset := [][]int{{1}, {2}, {3}}
+	//offset := [][]int{{1}, {2}, {3}}
+	return nil
 }
 
 //打印地图
