@@ -162,8 +162,10 @@ func (this *World) Straight(g *Grid) bool {
 	}
 
 	//斜线直连
-	if this.crossStraight(g) {
-		return true
+	xd := int(math.Abs(float64(g.X - this.target.X)))
+	yd := int(math.Abs(float64(g.Y - this.target.Y)))
+	if xd == yd {
+		return this.crossStraight(g)
 	}
 
 	return false
@@ -176,7 +178,7 @@ func (this *World) yStraight(g *Grid) bool {
 		min, max = max, min
 	}
 
-	for i := min+ 1; i < max; i++ {
+	for i := min + 1; i < max; i++ {
 		g1 := this.getGridByPox(g.X, i)
 		if g1.isBlock() {
 			return false
@@ -204,7 +206,38 @@ func (this *World) xStraight(g *Grid) bool {
 }
 
 func (this *World) crossStraight(g *Grid) bool {
-	return g.Y == this.target.Y
+	tmpY := []int{}
+	startY, endY := g.Y, this.target.Y
+	if startY < endY {
+		for i := startY + 1; i < endY; i++ {
+			tmpY = append(tmpY, i)
+		}
+	} else {
+		for i := startY - 1; i > endY; i-- {
+			tmpY = append(tmpY, i)
+		}
+	}
+
+	tmpX := []int{}
+	startX, endX := g.X, this.target.X
+	if startX < endX {
+		for i := startX + 1; i < endX; i++ {
+			tmpX = append(tmpX, i)
+		}
+	} else {
+		for i := startX - 1; i > endX; i-- {
+			tmpX = append(tmpX, i)
+		}
+	}
+
+	for i := 0; i < len(tmpY); i++ {
+		g2 := this.getGridByPox(tmpX[i], tmpY[i])
+		if g2.isBlock() {
+			return false
+		}
+	}
+
+	return true
 }
 
 //寻路

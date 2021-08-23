@@ -115,3 +115,29 @@ S.......
 	//output
 	fmt.Println(b)
 }
+
+func TestWorld_CrossStraight(t *testing.T) {
+	const worldTest string = `
+.......S
+........
+........
+........
+........
+........
+........
+T.......
+`
+	world := &World{}
+	ok := world.LoadWorld(worldTest)
+	if !ok {
+		return
+	}
+
+	world.Print()
+
+	fmt.Println("------------")
+
+	b := world.Straight(world.start)
+	//output
+	fmt.Println(b)
+}
