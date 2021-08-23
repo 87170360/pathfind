@@ -5,19 +5,17 @@ import (
 	"testing"
 )
 
-const worldTest string =
-`
-S...T...
+func TestNeighbors(t *testing.T) {
+	const worldTest string = `
+....T...
 ........
 ........
 B.BBB...
 ........
 .......B
 ........
-........
+S.......
 `
-
-func TestNeighbors(t *testing.T) {
 	world := &World{}
 	ok := world.LoadWorld(worldTest)
 	if !ok {
@@ -30,10 +28,38 @@ func TestNeighbors(t *testing.T) {
 
 	ns := world.Neighbors(world.start.X, world.start.Y)
 	for _, v := range ns {
-		v.S =  "N"
+		v.S = "N"
 	}
 
 	world.Print()
 	//world.PrintPox()
 }
 
+func TestDirect(t *testing.T) {
+	const worldTest string = `
+........
+........
+........
+........
+........
+........
+.T......
+S.......
+`
+	world := &World{}
+	ok := world.LoadWorld(worldTest)
+	if !ok {
+		return
+	}
+
+	world.Print()
+
+	fmt.Println("------------")
+
+	tmp := world.Direct(world.start, world.target)
+	for _, v := range tmp {
+		v.S = "D"
+	}
+
+	world.Print()
+}

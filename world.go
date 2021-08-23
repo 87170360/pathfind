@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"strings"
 )
 
@@ -11,12 +12,6 @@ type Grid struct {
 	X int    //坐标
 	Y int    //坐标
 	H int    //路径增量H值, 使用曼哈顿距离方法
-	G int    //路径增量G值
-}
-
-//获取路径增量
-func (g *Grid) F() int {
-	return g.H + g.G
 }
 
 func (g *Grid) isStart() bool {
@@ -103,7 +98,8 @@ func (this *World) Print() {
 	}
 }
 
-func (this *World) PrintPox() {
+//打印格子坐标
+func (this *World) PrintInfo() {
 	for i := ROW - 1; i >= 0; i-- {
 		for j := 0; j < COL; j++ {
 			grid := this.grids[i][j]
@@ -111,4 +107,44 @@ func (this *World) PrintPox() {
 		}
 		fmt.Println("")
 	}
+}
+
+//更新距离目标点距离
+func (this *World) UpdateH(g *Grid) {
+	xd := int(math.Abs(float64(g.X - this.target.X)))
+	yd := int(math.Abs(float64(g.Y - this.target.Y)))
+	g.H = xd + yd
+}
+
+//定向的格子, 返回从from向to方向的格子, 返回值不包括from和to
+func (this *World) Direct(from, to *Grid) []*Grid {
+	//from to 必须是相邻点
+	xd := int(math.Abs(float64(from.X - to.X)))
+	yd := int(math.Abs(float64(from.Y - to.Y)))
+	d := xd + yd
+	if d != 1 && d != 2 {
+		println("求方向的格子必须相邻")
+		return nil
+	}
+
+	ret := []*Grid{}
+
+	ox := from.X - to.X
+	oy := from.Y - to.Y
+	for i := 1; i < ROW; i++ {
+		x := to.X - ox*i
+		y := to.Y - oy*i
+		g := this.getGridByPox(x, y)
+		if g == nil {
+			break
+		}
+		ret = append(ret, g)
+	}
+
+	return ret
+}
+
+//寻路
+func (this *World) Find() {
+
 }
