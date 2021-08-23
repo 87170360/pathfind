@@ -12,3 +12,6 @@ const (
 	StateBlock  string = "B" //障碍
 	StatePath   string = "*" //路径点
 )
+
+//上，下，左，右，上左，上右，下左，下右
+var DirectOffset = [8][2]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}, {-1, 1}, {1, 1}, {-1, -1}, {1, -1}}

@@ -22,6 +22,10 @@ func (g *Grid) isTarget() bool {
 	return g.S == StateTarget
 }
 
+func (g *Grid) isBlock() bool {
+	return g.S == StateBlock
+}
+
 //数组第一维代表1行row
 type World struct {
 	grids  [COL][ROW]*Grid
@@ -63,9 +67,7 @@ func (this *World) getGridByPox(x, y int) *Grid {
 
 func (this *World) Neighbors(posX, posY int) []*Grid {
 	ret := make([]*Grid, 0, 8)
-	offset := [8][2]int{{0, 1}, {0, -1}, {-1, 0}, {1, 0}, {-1, 1}, {1, 1}, {-1, -1}, {1, -1}}
-	//上，下，左，右，上左，上右，下左，下右
-	for _, v := range offset {
+	for _, v := range DirectOffset {
 		x := posX + v[0]
 		y := posY + v[1]
 
@@ -117,7 +119,7 @@ func (this *World) UpdateH(g *Grid) {
 }
 
 //定向的格子, 返回从from向to方向的格子, 返回值不包括from和to
-func (this *World) Direct(from, to *Grid) []*Grid {
+func (this *World) Direct(from, to *Grid) (ret []*Grid) {
 	//from to 必须是相邻点
 	xd := int(math.Abs(float64(from.X - to.X)))
 	yd := int(math.Abs(float64(from.Y - to.Y)))
@@ -127,21 +129,82 @@ func (this *World) Direct(from, to *Grid) []*Grid {
 		return nil
 	}
 
-	ret := []*Grid{}
-
+	ret = []*Grid{}
 	ox := from.X - to.X
 	oy := from.Y - to.Y
 	for i := 1; i < ROW; i++ {
 		x := to.X - ox*i
 		y := to.Y - oy*i
 		g := this.getGridByPox(x, y)
-		if g == nil {
+		if g == nil || g.isBlock() {
 			break
 		}
 		ret = append(ret, g)
 	}
 
 	return ret
+}
+
+//与目标点直连
+func (this *World) Straight(g *Grid) bool {
+	if g.X == this.target.X && g.Y == this.target.Y {
+		return true
+	}
+
+	//纵向直连
+	if g.X == this.target.X {
+		return this.yStraight(g)
+	}
+
+	//横向直连
+	if g.Y == this.target.Y {
+		return this.xStraight(g)
+	}
+
+	//斜线直连
+	if this.crossStraight(g) {
+		return true
+	}
+
+	return false
+}
+
+func (this *World) yStraight(g *Grid) bool {
+
+	min, max := g.Y, this.target.Y
+	if min > max {
+		min, max = max, min
+	}
+
+	for i := min+ 1; i < max; i++ {
+		g1 := this.getGridByPox(g.X, i)
+		if g1.isBlock() {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (this *World) xStraight(g *Grid) bool {
+
+	min, max := g.X, this.target.X
+	if min > max {
+		min, max = max, min
+	}
+
+	for i := min + 1; i < max; i++ {
+		g1 := this.getGridByPox(i, g.Y)
+		if g1.isBlock() {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (this *World) crossStraight(g *Grid) bool {
+	return g.Y == this.target.Y
 }
 
 //寻路
