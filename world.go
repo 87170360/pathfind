@@ -321,13 +321,14 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 		//遍历通路格子是否直达目标点
 		for _, v := range d {
 			if p, ok := this.Straight(v, this.target); ok {
-				step = append(step, g)
-
 				if p2, ok2 := this.Straight(g, v); ok2 {
+					step = append(step, g)
 					path = append(path, g)
 					path = append(path, v)
 					path = append(path, p2...)
 				}
+
+				step = append(step, v)
 				path = append(path, p...)
 
 				//直连目标，结束寻路
