@@ -141,3 +141,36 @@ T.......
 	//output
 	fmt.Println(b)
 }
+
+func TestWorld_Find(t *testing.T) {
+	const worldTest string = `
+.......S
+........
+........
+........
+........
+........
+........
+T.......
+`
+	world := &World{}
+	ok := world.LoadWorld(worldTest)
+	if !ok {
+		return
+	}
+
+	world.Print()
+
+	fmt.Println("------------")
+
+	path, ok := world.Find()
+	if !ok {
+		fmt.Println("no found path.")
+		return
+	}
+
+	for _, v := range path {
+		v.S = "P"
+	}
+	world.Print()
+}

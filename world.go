@@ -1,6 +1,7 @@
 package main
 
 import (
+	"container/heap"
 	"fmt"
 	"math"
 	"strings"
@@ -240,7 +241,78 @@ func (this *World) crossStraight(g *Grid) bool {
 	return true
 }
 
-//寻路
-func (this *World) Find() {
+func (this *World) CreatePQ(gs []*Grid) *PriorityQueue {
+	pg := make(PriorityQueue, len(gs))
+	i := 0
+	for _, v := range gs {
+		pg[i] = &Item{
+			value:    v,
+			priority: v.H,
+			index:    i,
+		}
+		i++
+	}
+	heap.Init(&pg)
 
+	return &pg
+}
+
+func (this *World) PQPop(pq *PriorityQueue) *Grid {
+	if pq.Len() <= 0 {
+		return nil
+	}
+
+	item := heap.Pop(pq).(*Item)
+	return item.value.(*Grid)
+}
+
+//寻路， 最多只选择2步可达路径, path不包含起止点
+func (this *World) Find() (path []*Grid, find bool) {
+	path = []*Grid{}
+	find = false
+
+	//开始点直连接目标
+	if this.Straight(this.start) {
+		find = true
+		return
+	}
+
+	//取起点相邻点
+	n := this.Neighbors(this.start.X, this.start.Y)
+	//计算相邻点权重
+	for _, v := range n {
+		this.UpdateH(v)
+	}
+
+
+	//根据权重生成优先队列
+	pq := this.CreatePQ(n)
+	for pq.Len() > 0 && !find {
+		//从队列中取最优先格子
+		g := this.PQPop(pq)
+
+		//判断格子是否直连目标点
+		if this.Straight(g) {
+			//保存路点
+			path = append(path, g)
+			//直连目标，结束寻路
+			break
+		}
+
+		//非直接可达, 获取起点为原点，优先格子为方向，射线方向的通路格子
+		d := this.Direct(this.start, g)
+		//遍历通路格子是否直达目标点
+		for _, v := range d {
+			if this.Straight(v) {
+				//保存路点
+				path = append(path, g)
+				//直连目标，结束寻路
+				find = true
+				break
+			}
+		}
+	}
+
+	//不直连，标记最近位置
+	return
 }
