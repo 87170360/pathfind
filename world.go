@@ -291,6 +291,9 @@ func (this *World) PQPop(pq *PriorityQueue) *Grid {
 func (this *World) Find() (step, path []*Grid, find bool) {
 	//开始点直连接目标
 	if _, ok := this.Straight(this.stand, this.target); ok {
+		if p2, ok2 := this.Straight(this.stand, this.target); ok2 {
+			path = append(path, p2...)
+		}
 		find = true
 		return
 	}
