@@ -95,7 +95,7 @@ func (this *World) Print() {
 	for i := ROW - 1; i >= 0; i-- {
 		for j := 0; j < COL; j++ {
 			grid := this.grids[i][j]
-			fmt.Printf("%v", grid.S)
+			fmt.Printf("%v ", grid.S)
 		}
 		fmt.Println("")
 	}
@@ -322,7 +322,6 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 		for _, v := range d {
 			if p, ok := this.Straight(v, this.target); ok {
 				if p2, ok2 := this.Straight(g, v); ok2 {
-					step = append(step, g)
 					path = append(path, g)
 					path = append(path, v)
 					path = append(path, p2...)
