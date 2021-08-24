@@ -30,7 +30,7 @@ func (g *Grid) isBlock() bool {
 //数组第一维代表1行row
 type World struct {
 	grids  [COL][ROW]*Grid
-	start  *Grid
+	stand  *Grid
 	target *Grid
 }
 
@@ -49,7 +49,7 @@ func (this *World) LoadWorld(world string) bool {
 
 			this.grids[c][j] = grid
 			if grid.isStart() {
-				this.start = grid
+				this.stand = grid
 			}
 			if grid.isTarget() {
 				this.target = grid
@@ -82,11 +82,11 @@ func (this *World) Neighbors(posX, posY int) []*Grid {
 	return ret
 }
 
-func (this *World) StartPos() *Grid {
-	return this.start
+func (this *World) Stand() *Grid {
+	return this.stand
 }
 
-func (this *World) TargetPos() *Grid {
+func (this *World) Target() *Grid {
 	return this.target
 }
 
@@ -147,68 +147,86 @@ func (this *World) Direct(from, to *Grid) (ret []*Grid) {
 }
 
 //与目标点直连
-func (this *World) Straight(g *Grid) bool {
-	if g.X == this.target.X && g.Y == this.target.Y {
-		return true
+func (this *World) Straight(start, end *Grid) (path []*Grid, straight bool) {
+	if start.X == end.X && start.Y == end.Y {
+		return nil, true
 	}
 
 	//纵向直连
-	if g.X == this.target.X {
-		return this.yStraight(g)
+	if start.X == end.X {
+		return this.yStraight(start, end)
 	}
 
 	//横向直连
-	if g.Y == this.target.Y {
-		return this.xStraight(g)
+	if start.Y == end.Y {
+		return this.xStraight(start, end)
 	}
 
 	//斜线直连
-	xd := int(math.Abs(float64(g.X - this.target.X)))
-	yd := int(math.Abs(float64(g.Y - this.target.Y)))
+	xd := int(math.Abs(float64(start.X - end.X)))
+	yd := int(math.Abs(float64(start.Y - end.Y)))
 	if xd == yd {
-		return this.crossStraight(g)
+		return this.crossStraight(start, end)
 	}
 
-	return false
+	return
 }
 
-func (this *World) yStraight(g *Grid) bool {
-
-	min, max := g.Y, this.target.Y
-	if min > max {
-		min, max = max, min
-	}
-
-	for i := min + 1; i < max; i++ {
-		g1 := this.getGridByPox(g.X, i)
-		if g1.isBlock() {
-			return false
+func (this *World) yStraight(start, end *Grid) (path []*Grid, straight bool) {
+	startY, endY := start.Y, end.Y
+	if startY < endY {
+		for i := startY + 1; i < endY; i++ {
+			g1 := this.getGridByPox(start.X, i)
+			if g1.isBlock() {
+				straight = false
+				return
+			}
+			path = append(path, g1)
+		}
+	} else {
+		for i := startY - 1; i > endY; i-- {
+			g1 := this.getGridByPox(start.X, i)
+			if g1.isBlock() {
+				straight = false
+				return
+			}
+			path = append(path, g1)
 		}
 	}
 
-	return true
+	straight = true
+	return
 }
 
-func (this *World) xStraight(g *Grid) bool {
-
-	min, max := g.X, this.target.X
-	if min > max {
-		min, max = max, min
-	}
-
-	for i := min + 1; i < max; i++ {
-		g1 := this.getGridByPox(i, g.Y)
-		if g1.isBlock() {
-			return false
+func (this *World) xStraight(start, end *Grid) (path []*Grid, straight bool) {
+	startX, endX := start.X, end.X
+	if startX < endX {
+		for i := startX + 1; i < endX; i++ {
+			g1 := this.getGridByPox(i, start.Y)
+			if g1.isBlock() {
+				straight = false
+				return
+			}
+			path = append(path, g1)
+		}
+	} else {
+		for i := startX - 1; i > endX; i-- {
+			g1 := this.getGridByPox(i, start.Y)
+			if g1.isBlock() {
+				straight = false
+				return
+			}
+			path = append(path, g1)
 		}
 	}
 
-	return true
+	straight = true
+	return
 }
 
-func (this *World) crossStraight(g *Grid) bool {
+func (this *World) crossStraight(start, end *Grid) (path []*Grid, straight bool) {
 	tmpY := []int{}
-	startY, endY := g.Y, this.target.Y
+	startY, endY := start.Y, end.Y
 	if startY < endY {
 		for i := startY + 1; i < endY; i++ {
 			tmpY = append(tmpY, i)
@@ -220,7 +238,7 @@ func (this *World) crossStraight(g *Grid) bool {
 	}
 
 	tmpX := []int{}
-	startX, endX := g.X, this.target.X
+	startX, endX := start.X, end.X
 	if startX < endX {
 		for i := startX + 1; i < endX; i++ {
 			tmpX = append(tmpX, i)
@@ -234,11 +252,14 @@ func (this *World) crossStraight(g *Grid) bool {
 	for i := 0; i < len(tmpY); i++ {
 		g2 := this.getGridByPox(tmpX[i], tmpY[i])
 		if g2.isBlock() {
-			return false
+			straight = false
+			return
 		}
+		path = append(path, g2)
 	}
 
-	return true
+	straight = true
+	return
 }
 
 func (this *World) CreatePQ(gs []*Grid) *PriorityQueue {
@@ -266,24 +287,20 @@ func (this *World) PQPop(pq *PriorityQueue) *Grid {
 	return item.value.(*Grid)
 }
 
-//寻路， 最多只选择2步可达路径, path不包含起止点
-func (this *World) Find() (path []*Grid, find bool) {
-	path = []*Grid{}
-	find = false
-
+//寻路， 最多只选择2步可达路径, step是每一步的点， path路径上的格子
+func (this *World) Find() (step, path []*Grid, find bool) {
 	//开始点直连接目标
-	if this.Straight(this.start) {
+	if _, ok := this.Straight(this.stand, this.target); ok {
 		find = true
 		return
 	}
 
 	//取起点相邻点
-	n := this.Neighbors(this.start.X, this.start.Y)
+	n := this.Neighbors(this.stand.X, this.stand.Y)
 	//计算相邻点权重
 	for _, v := range n {
 		this.UpdateH(v)
 	}
-
 
 	//根据权重生成优先队列
 	pq := this.CreatePQ(n)
@@ -292,20 +309,27 @@ func (this *World) Find() (path []*Grid, find bool) {
 		g := this.PQPop(pq)
 
 		//判断格子是否直连目标点
-		if this.Straight(g) {
-			//保存路点
-			path = append(path, g)
+		if p, ok := this.Straight(g, this.target); ok {
+			step = append(step, g)
+			path = append(path, p...)
 			//直连目标，结束寻路
 			break
 		}
 
 		//非直接可达, 获取起点为原点，优先格子为方向，射线方向的通路格子
-		d := this.Direct(this.start, g)
+		d := this.Direct(this.stand, g)
 		//遍历通路格子是否直达目标点
 		for _, v := range d {
-			if this.Straight(v) {
-				//保存路点
-				path = append(path, g)
+			if p, ok := this.Straight(v, this.target); ok {
+				step = append(step, g)
+
+				if p2, ok2 := this.Straight(g, v); ok2 {
+					path = append(path, g)
+					path = append(path, v)
+					path = append(path, p2...)
+				}
+				path = append(path, p...)
+
 				//直连目标，结束寻路
 				find = true
 				break

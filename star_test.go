@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 )
 
@@ -26,7 +27,7 @@ S.......
 
 	fmt.Println("------------")
 
-	ns := world.Neighbors(world.start.X, world.start.Y)
+	ns := world.Neighbors(world.stand.X, world.stand.Y)
 	for _, v := range ns {
 		v.S = "N"
 	}
@@ -56,7 +57,7 @@ S.......
 
 	fmt.Println("------------")
 
-	tmp := world.Direct(world.start, world.target)
+	tmp := world.Direct(world.stand, world.target)
 	for _, v := range tmp {
 		v.S = "D"
 	}
@@ -73,7 +74,7 @@ func TestWorld_XStraight(t *testing.T) {
 ........
 ........
 ........
-TB.....S
+S......T
 `
 	world := &World{}
 	ok := world.LoadWorld(worldTest)
@@ -85,9 +86,13 @@ TB.....S
 
 	fmt.Println("------------")
 
-	b := world.Straight(world.start)
+	path, ok := world.Straight(world.stand, world.target)
 	//output
-	fmt.Println(b)
+	fmt.Printf("straight :%v\n", ok)
+	for _, v := range path {
+		v.S = StatePath
+	}
+	world.Print()
 }
 
 func TestWorld_YStraight(t *testing.T) {
@@ -95,10 +100,10 @@ func TestWorld_YStraight(t *testing.T) {
 T.......
 ........
 ........
-........
-........
-........
 B.......
+........
+........
+........
 S.......
 `
 	world := &World{}
@@ -111,21 +116,25 @@ S.......
 
 	fmt.Println("------------")
 
-	b := world.Straight(world.start)
+	path, ok := world.Straight(world.stand, world.target)
 	//output
-	fmt.Println(b)
+	fmt.Printf("straight :%v\n", ok)
+	for _, v := range path {
+		v.S = StatePath
+	}
+	world.Print()
 }
 
 func TestWorld_CrossStraight(t *testing.T) {
 	const worldTest string = `
-.......S
+.......T
 ........
 ........
 ........
 ........
 ........
 ........
-T.......
+S.......
 `
 	world := &World{}
 	ok := world.LoadWorld(worldTest)
@@ -137,15 +146,19 @@ T.......
 
 	fmt.Println("------------")
 
-	b := world.Straight(world.start)
+	path, ok := world.Straight(world.stand, world.target)
 	//output
-	fmt.Println(b)
+	fmt.Printf("straight :%v\n", ok)
+	for _, v := range path {
+		v.S = StatePath
+	}
+	world.Print()
 }
 
 func TestWorld_Find(t *testing.T) {
 	const worldTest string = `
 .......S
-........
+......B.
 ........
 ........
 ........
@@ -163,14 +176,19 @@ T.......
 
 	fmt.Println("------------")
 
-	path, ok := world.Find()
+	step, path, ok := world.Find()
 	if !ok {
 		fmt.Println("no found path.")
 		return
 	}
 
 	for _, v := range path {
-		v.S = "P"
+		v.S = StatePath
 	}
+
+	for i, v := range step {
+		v.S = strconv.Itoa(i+1)
+	}
+
 	world.Print()
 }
