@@ -298,6 +298,9 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 		return
 	}
 
+	//备选格子
+	var tmp []*Grid
+
 	//取起点相邻点
 	n := this.Neighbors(this.stand.X, this.stand.Y)
 	//计算相邻点权重
@@ -316,6 +319,7 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 			step = append(step, g)
 			path = append(path, p...)
 			//直连目标，结束寻路
+			find = true
 			break
 		}
 
@@ -323,23 +327,41 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 		d := this.Direct(this.stand, g)
 		//遍历通路格子是否直达目标点
 		for _, v := range d {
-			if p, ok := this.Straight(v, this.target); ok {
-				if p2, ok2 := this.Straight(g, v); ok2 {
-					path = append(path, g)
-					path = append(path, v)
-					path = append(path, p2...)
-				}
-
-				step = append(step, v)
-				path = append(path, p...)
-
-				//直连目标，结束寻路
-				find = true
-				break
+			p, ok := this.Straight(v, this.target)
+			if !ok {
+				continue
 			}
+
+			//相邻格子到通路格子路径
+			if p2, ok2 := this.Straight(g, v); ok2 {
+				path = append(path, g)
+				path = append(path, v)
+				path = append(path, p2...)
+			}
+
+			step = append(step, v)
+			path = append(path, p...)
+
+			//直连目标，结束寻路
+			find = true
+			break
+		}
+
+		if !find && len(d) > 0 {
+			tmp = append(tmp, d[len(d)-1])
 		}
 	}
 
-	//不直连，标记最近位置
+	if !find && len(tmp) > 0 {
+		//不直连，标记最近位置
+		for _, v := range tmp {
+			this.UpdateH(v)
+		}
+		pq2 := this.CreatePQ(tmp)
+		backup := this.PQPop(pq2)
+		if p, ok := this.Straight(this.stand, backup); ok {
+			path = append(path, p...)
+		}
+	}
 	return
 }
