@@ -1,4 +1,4 @@
-package main
+package world
 
 const (
 	ROW int = 8

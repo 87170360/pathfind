@@ -1,4 +1,4 @@
-package main
+package world
 
 //Open列表
 var OpenList PriorityQueue

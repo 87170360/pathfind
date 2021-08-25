@@ -1,4 +1,4 @@
-package main
+package world
 
 import (
 	"container/heap"
@@ -321,91 +321,6 @@ func (this *World) PQPop(pq *PriorityQueue) *Grid {
 	item := heap.Pop(pq).(*Item)
 	return item.value.(*Grid)
 }
-
-/*
-//寻路， 最多只选择2步可达路径, step是每一步的点， path路径上的格子
-func (this *World) Find() (step, path []*Grid, find bool) {
-	//起点直连目标点
-	if p, ok := this.Straight(this.stand, this.target); ok {
-		path = append(path, p...)
-		step = append(step, this.target)
-		find = true
-		return
-	}
-
-	//找不到路径下的备选格子
-	var tmp []*Grid
-
-	//取起点相邻点
-	neighbors := this.Neighbors(this.stand.X, this.stand.Y)
-	//计算相邻点权重
-	for _, v := range neighbors {
-		this.UpdateH(v)
-	}
-	//把相邻点生成优先队列
-	pq := this.CreatePQ(neighbors)
-	//遍历8个方向的全部格子是否直达目标
-	for pq.Len() > 0 && !find {
-		//取权重优先的相邻点
-		priorityNeighbor := this.PQPop(pq)
-
-		//判断相邻点本身是否直连目标点
-		if p, ok := this.Straight(priorityNeighbor, this.target); ok {
-			step = append(step, priorityNeighbor)
-			path = append(path, p...)
-			//直连目标，结束寻路
-			find = true
-			break
-		}
-
-		//起点为原点相邻点为方向，射线方向的点
-		direct := this.Direct(this.stand, priorityNeighbor)
-		//射线点是否直达目标点
-		for _, v := range direct {
-			p, ok := this.Straight(v, this.target)
-			if !ok {
-				continue
-			}
-
-			//相邻点到射线点路径
-			if p2, ok2 := this.Straight(priorityNeighbor, v); ok2 {
-				path = append(path, priorityNeighbor)
-				path = append(path, v)
-				path = append(path, p2...)
-			}
-
-			step = append(step, v)
-			path = append(path, p...)
-
-			find = true
-			//结束寻路
-			break
-		}
-
-		if !find && len(direct) > 0 {
-			tmp = append(tmp, direct[len(direct)-1])
-		}
-	}
-
-	if !find && len(tmp) > 0 {
-		//不直连，标记最近位置
-		for _, v := range tmp {
-			this.UpdateH(v)
-		}
-		pq2 := this.CreatePQ(tmp)
-		backup := this.PQPop(pq2)
-		if p, ok := this.Straight(this.stand, backup); ok {
-			path = append(path, p...)
-		}
-		step = append(step, backup)
-	}
-
-	if find {
-		step = append(step, this.target)
-	}
-	return
-}
- */
 
 func (this *World) FindStep() (step []*Grid, find bool) {
 	//起点直连目标点

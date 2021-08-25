@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"myconf"
+	"world"
 )
 
 /*
@@ -13,7 +15,7 @@ row:0 |---------
 
 func main() {
 	//fmt.Printf("%v", Conf.World)
-	for _, v := range Conf.World {
+	for _, v := range myconf.Conf.World {
 		work(v)
 		fmt.Println("=========================================")
 	}
@@ -21,7 +23,7 @@ func main() {
 }
 
 func work(data string) {
-	world := &World{}
+	world := &world.World{}
 	ok := world.LoadWorld(data)
 	if !ok {
 		return
