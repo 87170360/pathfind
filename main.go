@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 )
 
 /*
@@ -32,16 +31,10 @@ func work(data string) {
 
 	fmt.Println("------------")
 
-	step, path, ok := world.Find()
+	step, ok := world.FindStep()
 	fmt.Printf("found :%v\n", ok)
 
-	for _, v := range path {
-		v.S = StatePath
-	}
-
-	for i, v := range step {
-		v.S = strconv.Itoa(i+1)
-	}
-
+	world.SetPathState(step)
+	world.SetStepState(step)
 	world.Print()
 }

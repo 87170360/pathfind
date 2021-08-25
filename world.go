@@ -4,6 +4,7 @@ import (
 	"container/heap"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 )
 
@@ -101,6 +102,28 @@ func (this *World) Print() {
 	}
 }
 
+func (this *World) SetPathState(step []*Grid) {
+	start := this.stand
+	for _, v := range step {
+		p, ok := this.Straight(start, v, true)
+		if !ok {
+			continue
+		}
+
+		for _, v2 := range p {
+			v2.S = StatePath
+		}
+
+		start = v
+	}
+}
+
+func (this *World) SetStepState(step []*Grid) {
+	for i, v := range step {
+		v.S = strconv.Itoa(i+1)
+	}
+}
+
 //打印格子坐标
 func (this *World) PrintInfo() {
 	for i := ROW - 1; i >= 0; i-- {
@@ -147,32 +170,32 @@ func (this *World) Direct(from, to *Grid) (ret []*Grid) {
 }
 
 //与目标点直连, path不包括首尾的中间点
-func (this *World) Straight(start, end *Grid) (path []*Grid, straight bool) {
+func (this *World) Straight(start, end *Grid, retPath bool) (path []*Grid, straight bool) {
 	if start.X == end.X && start.Y == end.Y {
 		return nil, true
 	}
 
 	//纵向直连
 	if start.X == end.X {
-		return this.yStraight(start, end)
+		return this.yStraight(start, end, retPath)
 	}
 
 	//横向直连
 	if start.Y == end.Y {
-		return this.xStraight(start, end)
+		return this.xStraight(start, end, retPath)
 	}
 
 	//斜线直连
 	xd := int(math.Abs(float64(start.X - end.X)))
 	yd := int(math.Abs(float64(start.Y - end.Y)))
 	if xd == yd {
-		return this.crossStraight(start, end)
+		return this.crossStraight(start, end, retPath)
 	}
 
 	return
 }
 
-func (this *World) yStraight(start, end *Grid) (path []*Grid, straight bool) {
+func (this *World) yStraight(start, end *Grid, retPath bool) (path []*Grid, straight bool) {
 	startY, endY := start.Y, end.Y
 	if startY < endY {
 		for i := startY + 1; i < endY; i++ {
@@ -181,7 +204,10 @@ func (this *World) yStraight(start, end *Grid) (path []*Grid, straight bool) {
 				straight = false
 				return
 			}
-			path = append(path, g1)
+
+			if retPath {
+				path = append(path, g1)
+			}
 		}
 	} else {
 		for i := startY - 1; i > endY; i-- {
@@ -190,7 +216,10 @@ func (this *World) yStraight(start, end *Grid) (path []*Grid, straight bool) {
 				straight = false
 				return
 			}
-			path = append(path, g1)
+
+			if retPath {
+				path = append(path, g1)
+			}
 		}
 	}
 
@@ -198,7 +227,7 @@ func (this *World) yStraight(start, end *Grid) (path []*Grid, straight bool) {
 	return
 }
 
-func (this *World) xStraight(start, end *Grid) (path []*Grid, straight bool) {
+func (this *World) xStraight(start, end *Grid, retPath bool) (path []*Grid, straight bool) {
 	startX, endX := start.X, end.X
 	if startX < endX {
 		for i := startX + 1; i < endX; i++ {
@@ -207,7 +236,9 @@ func (this *World) xStraight(start, end *Grid) (path []*Grid, straight bool) {
 				straight = false
 				return
 			}
-			path = append(path, g1)
+			if retPath {
+				path = append(path, g1)
+			}
 		}
 	} else {
 		for i := startX - 1; i > endX; i-- {
@@ -216,7 +247,9 @@ func (this *World) xStraight(start, end *Grid) (path []*Grid, straight bool) {
 				straight = false
 				return
 			}
-			path = append(path, g1)
+			if retPath {
+				path = append(path, g1)
+			}
 		}
 	}
 
@@ -224,7 +257,7 @@ func (this *World) xStraight(start, end *Grid) (path []*Grid, straight bool) {
 	return
 }
 
-func (this *World) crossStraight(start, end *Grid) (path []*Grid, straight bool) {
+func (this *World) crossStraight(start, end *Grid, retPath bool) (path []*Grid, straight bool) {
 	tmpY := []int{}
 	startY, endY := start.Y, end.Y
 	if startY < endY {
@@ -255,7 +288,9 @@ func (this *World) crossStraight(start, end *Grid) (path []*Grid, straight bool)
 			straight = false
 			return
 		}
-		path = append(path, g2)
+		if retPath {
+			path = append(path, g2)
+		}
 	}
 
 	straight = true
@@ -287,6 +322,7 @@ func (this *World) PQPop(pq *PriorityQueue) *Grid {
 	return item.value.(*Grid)
 }
 
+/*
 //寻路， 最多只选择2步可达路径, step是每一步的点， path路径上的格子
 func (this *World) Find() (step, path []*Grid, find bool) {
 	//起点直连目标点
@@ -361,6 +397,74 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 		if p, ok := this.Straight(this.stand, backup); ok {
 			path = append(path, p...)
 		}
+		step = append(step, backup)
+	}
+
+	if find {
+		step = append(step, this.target)
+	}
+	return
+}
+ */
+
+func (this *World) FindStep() (step []*Grid, find bool) {
+	//起点直连目标点
+	if _, ok := this.Straight(this.stand, this.target, false); ok {
+		step = append(step, this.target)
+		find = true
+		return
+	}
+
+	//找不到路径下的备选格子
+	var tmp []*Grid
+
+	//取起点相邻点
+	neighbors := this.Neighbors(this.stand.X, this.stand.Y)
+	//计算相邻点权重
+	for _, v := range neighbors {
+		this.UpdateH(v)
+	}
+	//把相邻点生成优先队列
+	pq := this.CreatePQ(neighbors)
+	//遍历8个方向的全部格子是否直达目标
+	for pq.Len() > 0 && !find {
+		//取权重优先的相邻点
+		priorityNeighbor := this.PQPop(pq)
+
+		//判断相邻点本身是否直连目标点
+		if _, ok := this.Straight(priorityNeighbor, this.target, false); ok {
+			step = append(step, priorityNeighbor)
+			//直连目标，结束寻路
+			find = true
+			break
+		}
+
+		//起点为原点相邻点为方向，射线方向的点
+		direct := this.Direct(this.stand, priorityNeighbor)
+		//射线点是否直达目标点
+		for _, v := range direct {
+			_, ok := this.Straight(v, this.target, false)
+			if !ok {
+				continue
+			}
+			step = append(step, v)
+			find = true
+			//结束寻路
+			break
+		}
+
+		if !find && len(direct) > 0 {
+			tmp = append(tmp, direct[len(direct)-1])
+		}
+	}
+
+	//没有路径，从备选点中选择权重高的
+	if !find && len(tmp) > 0 {
+		for _, v := range tmp {
+			this.UpdateH(v)
+		}
+		pq2 := this.CreatePQ(tmp)
+		backup := this.PQPop(pq2)
 		step = append(step, backup)
 	}
 
