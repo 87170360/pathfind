@@ -119,7 +119,7 @@ func (this *World) UpdateH(g *Grid) {
 	g.H = xd + yd
 }
 
-//定向的格子, 返回从from向to方向的格子, 返回值不包括from和to
+//定向的格子, 返回从from向to方向的格子(遇到边界或障碍物为止), 返回值不包括from和to
 func (this *World) Direct(from, to *Grid) (ret []*Grid) {
 	//from to 必须是相邻点
 	xd := int(math.Abs(float64(from.X - to.X)))
@@ -146,7 +146,7 @@ func (this *World) Direct(from, to *Grid) (ret []*Grid) {
 	return ret
 }
 
-//与目标点直连
+//与目标点直连, path不包括首尾的中间点
 func (this *World) Straight(start, end *Grid) (path []*Grid, straight bool) {
 	if start.X == end.X && start.Y == end.Y {
 		return nil, true
@@ -289,52 +289,51 @@ func (this *World) PQPop(pq *PriorityQueue) *Grid {
 
 //寻路， 最多只选择2步可达路径, step是每一步的点， path路径上的格子
 func (this *World) Find() (step, path []*Grid, find bool) {
-	//开始点直连接目标
-	if _, ok := this.Straight(this.stand, this.target); ok {
-		if p2, ok2 := this.Straight(this.stand, this.target); ok2 {
-			path = append(path, p2...)
-		}
+	//起点直连目标点
+	if p, ok := this.Straight(this.stand, this.target); ok {
+		path = append(path, p...)
+		step = append(step, this.target)
 		find = true
 		return
 	}
 
-	//备选格子
+	//找不到路径下的备选格子
 	var tmp []*Grid
 
 	//取起点相邻点
-	n := this.Neighbors(this.stand.X, this.stand.Y)
+	neighbors := this.Neighbors(this.stand.X, this.stand.Y)
 	//计算相邻点权重
-	for _, v := range n {
+	for _, v := range neighbors {
 		this.UpdateH(v)
 	}
-
-	//根据权重生成优先队列
-	pq := this.CreatePQ(n)
+	//把相邻点生成优先队列
+	pq := this.CreatePQ(neighbors)
+	//遍历8个方向的全部格子是否直达目标
 	for pq.Len() > 0 && !find {
-		//从队列中取最优先格子
-		g := this.PQPop(pq)
+		//取权重优先的相邻点
+		priorityNeighbor := this.PQPop(pq)
 
-		//判断格子是否直连目标点
-		if p, ok := this.Straight(g, this.target); ok {
-			step = append(step, g)
+		//判断相邻点本身是否直连目标点
+		if p, ok := this.Straight(priorityNeighbor, this.target); ok {
+			step = append(step, priorityNeighbor)
 			path = append(path, p...)
 			//直连目标，结束寻路
 			find = true
 			break
 		}
 
-		//非直接可达, 获取起点为原点，优先格子为方向，射线方向的通路格子
-		d := this.Direct(this.stand, g)
-		//遍历通路格子是否直达目标点
-		for _, v := range d {
+		//起点为原点相邻点为方向，射线方向的点
+		direct := this.Direct(this.stand, priorityNeighbor)
+		//射线点是否直达目标点
+		for _, v := range direct {
 			p, ok := this.Straight(v, this.target)
 			if !ok {
 				continue
 			}
 
-			//相邻格子到通路格子路径
-			if p2, ok2 := this.Straight(g, v); ok2 {
-				path = append(path, g)
+			//相邻点到射线点路径
+			if p2, ok2 := this.Straight(priorityNeighbor, v); ok2 {
+				path = append(path, priorityNeighbor)
 				path = append(path, v)
 				path = append(path, p2...)
 			}
@@ -342,13 +341,13 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 			step = append(step, v)
 			path = append(path, p...)
 
-			//直连目标，结束寻路
 			find = true
+			//结束寻路
 			break
 		}
 
-		if !find && len(d) > 0 {
-			tmp = append(tmp, d[len(d)-1])
+		if !find && len(direct) > 0 {
+			tmp = append(tmp, direct[len(direct)-1])
 		}
 	}
 
@@ -362,6 +361,11 @@ func (this *World) Find() (step, path []*Grid, find bool) {
 		if p, ok := this.Straight(this.stand, backup); ok {
 			path = append(path, p...)
 		}
+		step = append(step, backup)
+	}
+
+	if find {
+		step = append(step, this.target)
 	}
 	return
 }
