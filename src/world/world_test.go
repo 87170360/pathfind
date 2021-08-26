@@ -197,12 +197,7 @@ B.......
 S.......
 `
 	world := &World{}
-	ok := world.LoadWorld(worldTest)
-	if !ok {
-		b.Log("loadWorld error")
-		return
-	}
-
+	world.LoadWorld(worldTest)
 	for i := 0; i < b.N; i++ {
 		world.FindStep()
 	}
