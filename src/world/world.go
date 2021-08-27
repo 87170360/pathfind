@@ -74,7 +74,7 @@ func (this *World) Neighbors(posX, posY int) []*Grid {
 		y := posY + v[1]
 
 		n := this.getGridByPox(x, y)
-		if n == nil {
+		if n == nil || n.isBlock() {
 			continue
 		}
 		ret = append(ret, n)
