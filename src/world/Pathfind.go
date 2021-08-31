@@ -120,7 +120,7 @@ func (this *World) SetPathState(step []*Grid) {
 
 func (this *World) SetStepState(step []*Grid) {
 	for i, v := range step {
-		v.S = strconv.Itoa(i+1)
+		v.S = strconv.Itoa(i + 1)
 	}
 }
 
@@ -137,9 +137,14 @@ func (this *World) PrintInfo() {
 
 //更新距离目标点距离
 func (this *World) UpdateH(g *Grid) {
-	xd := int(math.Abs(float64(g.X - this.target.X)))
-	yd := int(math.Abs(float64(g.Y - this.target.Y)))
-	g.H = xd + yd
+	xd := math.Abs(float64(g.X - this.target.X))
+	yd := math.Abs(float64(g.Y - this.target.Y))
+	//距离
+	distance := math.Sqrt(xd*xd + yd*yd)
+	g.H = int(distance) * 100
+	//阻塞度
+	neighbors := this.Neighbors(g.X, g.Y)
+	g.H -= len(neighbors)
 }
 
 //定向的格子, 返回从from向to方向的格子(遇到边界或障碍物为止), 返回值不包括from和to
@@ -335,6 +340,8 @@ func (this *World) FindStep() (step []*Grid, find bool) {
 
 	//取起点相邻点
 	neighbors := this.Neighbors(this.stand.X, this.stand.Y)
+	tmp = append(tmp, neighbors...)
+
 	//计算相邻点权重
 	for _, v := range neighbors {
 		this.UpdateH(v)
@@ -369,7 +376,7 @@ func (this *World) FindStep() (step []*Grid, find bool) {
 		}
 
 		if !find && len(direct) > 0 {
-			tmp = append(tmp, direct[len(direct)-1])
+			tmp = append(tmp, direct...)
 		}
 	}
 

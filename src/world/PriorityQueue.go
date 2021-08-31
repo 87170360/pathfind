@@ -2,15 +2,12 @@ package world
 
 import "container/heap"
 
-// Item 是优先队列中包含的元素。
 type Item struct {
-	value    interface{} // 元素的值
-	priority int         // 元素在队列中的优先级。
-	// 元素的索引可以用于更新操作，它由 heap.Interface 定义的方法维护。
-	index int // 元素在堆中的索引。
+	value    interface{}
+	priority int
+	index int
 }
 
-// 一个实现了 heap.Interface 接口的优先队列，队列中包含任意多个 Item 结构。
 type PriorityQueue []*Item
 
 func (pq PriorityQueue) Len() int { return len(pq) }
@@ -36,12 +33,11 @@ func (pq *PriorityQueue) Pop() interface{} {
 	old := *pq
 	n := len(old)
 	item := old[n-1]
-	item.index = -1 // 为了安全性考虑而做的设置
+	item.index = -1
 	*pq = old[0 : n-1]
 	return item
 }
 
-// 更新函数会修改队列中指定元素的优先级以及值。
 func (pq *PriorityQueue) update(item *Item, value interface{}, priority int) {
 	item.value = value
 	item.priority = priority
