@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/astar.iml" filepath="$PROJECT_DIR$/.idea/astar.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/pathfind.iml" filepath="$PROJECT_DIR$/.idea/pathfind.iml" />
     </modules>
   </component>
 </project>
